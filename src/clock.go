@@ -1,11 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 // Each position of this array describes how a digit will be displayed as a
 // 7-segment clock digit. For each digit, a segment could be false or true.
-// Segments are shown below:
-//    __1__
+// Segments are shown below: __1__
 // 0 |     | 2
 //   |__3__|
 // 4 |     | 6
@@ -85,21 +88,80 @@ func buildDigit(digitValue, segSize int) (digit [][]byte) {
 	return
 }
 
-func printDigit(digit [][]byte) {
+func printDigit(digit [][]byte, offset int) {
 	for i := range digit {
+		MoveCursorForward(offset)
+
 		for j := range digit[i] {
 			fmt.Printf("%c", digit[i][j])
 		}
 
+		// We should print newlines instead of abusing ANSI escape
+		// sequences to the move cursor because otherwise we might end messing
+		// up the screen.
 		fmt.Println()
 	}
 
 	fmt.Println()
 }
 
-func main() {
-	for d := 0; d <= 9; d++ {
-		digit := buildDigit(d, 4)
-		printDigit(digit)
+func printClockPiece(piece [2]int, segSize, offset int) {
+	rows := segSize*2 + 1
+	cols := segSize*2 + 2
+
+	for _, d := range piece {
+		digit := buildDigit(d, segSize)
+		printDigit(digit, offset)
+
+		offset += cols + 1
+		MoveCursorUp(rows + 1)
 	}
+}
+
+// PrintClock prints the time passed in the format HH:MM:SS string as a
+// 7-segment clock.
+func PrintClock(currTime string, segSize, offset int) {
+	// At this time we only support HH:MM:SS format.
+	strs := strings.Split(currTime, ":")
+	time := make([][2]int, 3)
+
+	for i, s := range strs {
+		tmp := strings.Split(s, "")
+
+		time[i][0], _ = strconv.Atoi(tmp[0])
+		time[i][1], _ = strconv.Atoi(tmp[1])
+	}
+
+	fmt.Println(time)
+
+	rows := segSize*2 + 1
+	cols := segSize*2 + 2
+
+	// Printing hour, minutes and seconds.
+	for i, piece := range time {
+		printClockPiece(piece, segSize, offset)
+		offset += 3*cols + 1
+
+		// Printing double dots to separate hour/minute/second.
+		if i < 2 {
+			SaveCursorPos()
+			MoveCursorForward(offset - 3)
+			MoveCursorDown(rows / 2)
+
+			dot := "○"
+			fmt.Printf("%s", dot)
+
+			MoveCursorBack(1)
+			MoveCursorDown(1)
+			fmt.Printf("%s", dot)
+
+			RestoreCursorPos()
+		}
+	}
+
+	MoveCursorDown(rows + 1)
+}
+
+func main() {
+	PrintClock("22:30:37", 2, 4)
 }
