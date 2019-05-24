@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 const (
@@ -40,12 +42,31 @@ func Printf(format string, args ...interface{}) (n int, err error) {
 // Flush writes everything that is on the screen buffer, reset it and flush
 // stdout.
 func Flush() {
+	// When stopping program with Ctrl-C output may not be written fully. Thus,
+	// we need to handle the interrupt signal to flush everything before
+	// exiting program.
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	flushed := make(chan bool, 1)
+
+	go func() {
+		// Receive value from channel.
+		<-sig
+
+		// Receive value saying that everything was flushed.
+		<-flushed
+
+		// Now program can be stopped.
+		os.Exit(0)
+	}()
+
 	for _, str := range screen.String() {
 		out.WriteRune(str)
 	}
 
 	screen.Reset()
 	out.Flush()
+	flushed <- true
 }
 
 // MoveCursorUp moves the cursor <n> cells up.
@@ -71,6 +92,11 @@ func MoveCursorBack(n int) {
 // MoveCursorPreviousLine moves the cursor to beginning of <n> lines up.
 func MoveCursorPreviousLine(n int) {
 	fmt.Fprintf(screen, "%s%dF", csi, n)
+}
+
+// MoveCursorNextLine moves the cursor to beginning of <n> lines down.
+func MoveCursorNextLine(n int) {
+	fmt.Fprintf(screen, "%s%dE", csi, n)
 }
 
 // HideCursor hides the cursor.
