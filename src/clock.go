@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 // Each position of this array describes how a digit will be displayed as a
 // 7-segment clock digit. For each digit, a segment could be false or true.
 // Segments are shown below: __1__
@@ -91,16 +87,16 @@ func printDigit(digit [][]byte, offset int) {
 		MoveCursorForward(offset)
 
 		for j := range digit[i] {
-			fmt.Printf("%c", digit[i][j])
+			Printf("%c", digit[i][j])
 		}
 
 		// We should print newlines instead of abusing ANSI escape
 		// sequences to the move cursor because otherwise we might end messing
 		// up the screen.
-		fmt.Println()
+		Println()
 	}
 
-	fmt.Println()
+	Println()
 }
 
 func printClockPiece(piece [2]int, segSize, offset int) {
@@ -120,9 +116,6 @@ func printClockPiece(piece [2]int, segSize, offset int) {
 // 7-segment clock. PrintClock also returns the number of rows and cols this
 // clock uses.
 func PrintClock(time [3][2]int, segSize, offset int) {
-	// Hide cursor to make a pretty print.
-	HideCursor()
-
 	// Set number of rows and cols.
 	rows := segSize*2 + 1
 	cols := segSize*2 + 2
@@ -134,22 +127,22 @@ func PrintClock(time [3][2]int, segSize, offset int) {
 
 		// Printing double dots to separate hour/minute/second.
 		if i < 2 {
-			SaveCursorPos()
+			// Print the first dot
 			MoveCursorForward(offset - 3)
 			MoveCursorDown(rows / 2)
+			Printf("%s", "○")
 
-			dot := "○"
-			fmt.Printf("%s", dot)
-
+			// Print the second dot
 			MoveCursorBack(1)
 			MoveCursorDown(1)
-			fmt.Printf("%s", dot)
+			Printf("%s", "○")
 
-			RestoreCursorPos()
+			// Return to initial position.
+			MoveCursorBack(offset - 2)
+			MoveCursorUp(rows/2 + 1)
 		}
 	}
 
-	// Move all the way down and show cursor again.
 	MoveCursorDown(rows + 1)
-	ShowCursor()
+	Flush()
 }
