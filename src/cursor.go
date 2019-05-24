@@ -33,6 +33,11 @@ func MoveCursorBack(n int) {
 	fmt.Printf("%s%dD", csi, n)
 }
 
+// MoveCursorPreviousLine moves the cursor to beginning of <n> lines up.
+func MoveCursorPreviousLine(n int) {
+	fmt.Printf("%s%dF", csi, n)
+}
+
 // SaveCursorPos saves the current position.
 func SaveCursorPos() {
 	fmt.Printf("%ss", csi)
@@ -41,4 +46,14 @@ func SaveCursorPos() {
 // RestoreCursorPos restores the current position.
 func RestoreCursorPos() {
 	fmt.Printf("%su", csi)
+}
+
+// HideCursor hides the cursor.
+func HideCursor() {
+	fmt.Printf("%s?25l", csi)
+}
+
+// ShowCursor shows the cursor.
+func ShowCursor() {
+	fmt.Printf("%s?25h", csi)
 }

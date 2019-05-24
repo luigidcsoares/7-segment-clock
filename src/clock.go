@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 )
 
 // Each position of this array describes how a digit will be displayed as a
@@ -119,21 +117,9 @@ func printClockPiece(piece [2]int, segSize, offset int) {
 }
 
 // PrintClock prints the time passed in the format HH:MM:SS string as a
-// 7-segment clock.
-func PrintClock(currTime string, segSize, offset int) {
-	// At this time we only support HH:MM:SS format.
-	strs := strings.Split(currTime, ":")
-	time := make([][2]int, 3)
-
-	for i, s := range strs {
-		tmp := strings.Split(s, "")
-
-		time[i][0], _ = strconv.Atoi(tmp[0])
-		time[i][1], _ = strconv.Atoi(tmp[1])
-	}
-
-	fmt.Println(time)
-
+// 7-segment clock. PrintClock also returns the number of rows and cols this
+// clock uses.
+func PrintClock(time [3][2]int, segSize, offset int) {
 	rows := segSize*2 + 1
 	cols := segSize*2 + 2
 
@@ -159,9 +145,6 @@ func PrintClock(currTime string, segSize, offset int) {
 		}
 	}
 
-	MoveCursorDown(rows + 1)
-}
-
-func main() {
-	PrintClock("22:30:37", 2, 4)
+	MoveCursorDown(rows)
+	fmt.Println()
 }
