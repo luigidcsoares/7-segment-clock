@@ -120,6 +120,10 @@ func printClockPiece(piece [2]int, segSize, offset int) {
 // 7-segment clock. PrintClock also returns the number of rows and cols this
 // clock uses.
 func PrintClock(time [3][2]int, segSize, offset int) {
+	// Hide cursor to make a pretty print.
+	HideCursor()
+
+	// Set number of rows and cols.
 	rows := segSize*2 + 1
 	cols := segSize*2 + 2
 
@@ -145,6 +149,7 @@ func PrintClock(time [3][2]int, segSize, offset int) {
 		}
 	}
 
-	MoveCursorDown(rows)
-	fmt.Println()
+	// Move all the way down and show cursor again.
+	MoveCursorDown(rows + 1)
+	ShowCursor()
 }
