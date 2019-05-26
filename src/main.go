@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+	"os/signal"
 	"time"
 )
 
@@ -9,6 +12,21 @@ func main() {
 	segSize := 2
 	offset := 4
 	rows := segSize*2 + 1
+
+	// Handle interrupt signal (Ctrl-C) properly.
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+
+	go func() {
+		// Receive the OS interrupt signal.
+		<-sig
+
+		// Print exit message using the carriage return to erase ^C caused by
+		// Ctrl-C signal.
+		fmt.Print("\rSee ya ;)")
+
+		os.Exit(0)
+	}()
 
 	PrintClock(NowAsMatrix(), segSize, offset)
 	for {
