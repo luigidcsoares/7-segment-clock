@@ -16,6 +16,18 @@ const (
 	csi = esc + "["
 )
 
+// Basic 3/4 bit ANSI colors.
+const (
+	ColorBlack   = csi + "1;30m"
+	ColorRed     = csi + "1;31m"
+	ColorGreen   = csi + "1;32m"
+	ColorYellow  = csi + "1;33m"
+	ColorBlue    = csi + "1;34m"
+	ColorMagenta = csi + "1;35m"
+	ColorCyan    = csi + "1;36m"
+	ColorWhite   = csi + "1;37m"
+)
+
 // A new buffered writer to write to stdout.
 var out = bufio.NewWriter(os.Stdout)
 

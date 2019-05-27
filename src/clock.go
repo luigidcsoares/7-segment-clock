@@ -82,63 +82,71 @@ func buildDigit(digitValue, segSize int) (digit [][]byte) {
 	return
 }
 
-func printDigit(digit [][]byte, offset int) {
+func printDigit(digit [][]byte, margin int) {
 	for i := range digit {
-		MoveCursorForward(offset)
+		MoveCursorForward(margin)
 
 		for j := range digit[i] {
 			Printf("%c", digit[i][j])
 		}
 
-		// We should print newlines instead of abusing ANSI escape
-		// sequences to the move cursor because otherwise we might end messing
-		// up the screen.
 		Println()
 	}
 
 	Println()
 }
 
-func printClockPiece(piece [2]int, segSize, offset int) {
+func printClockUnit(unit [2]int, segSize, margin int) {
 	rows := segSize*2 + 1
 	cols := segSize*2 + 2
 
-	for _, d := range piece {
+	for _, d := range unit {
 		digit := buildDigit(d, segSize)
-		printDigit(digit, offset)
+		printDigit(digit, margin)
 
-		offset += cols + 1
+		margin += cols + 1
 		MoveCursorUp(rows + 1)
 	}
 }
 
 // PrintClock prints the time passed in the format HH:MM:SS string as a
-// 7-segment clock. PrintClock also returns the number of rows and cols this
-// clock uses.
-func PrintClock(time [3][2]int, segSize, offset int) {
+// 7-segment clock.
+func PrintClock(time [3][2]int, segSize, margin int) {
 	// Set number of rows and cols.
 	rows := segSize*2 + 1
 	cols := segSize*2 + 2
 
+	// The column where we're going to start printing.
+	currColumn := margin
+
 	// Printing hour, minutes and seconds.
-	for i, piece := range time {
-		printClockPiece(piece, segSize, offset)
-		offset += 3*cols + 1
+	for i, unit := range time {
+		printClockUnit(unit, segSize, currColumn)
+
+		// We're printing two digits at a time. We're also given an offset to
+		// the first digit with the initial margin value.So, we need to
+		// increase by this margin value to overpass the already printed
+		// digits.
+		currColumn += 3*cols + margin
 
 		// Printing double dots to separate hour/minute/second.
 		if i < 2 {
-			// Print the first dot
-			MoveCursorForward(offset - 3)
+			// Print the first dot.
+			// We're subtracting segSize - 1 just to center the dot between
+			// unit digits.
+			MoveCursorForward(currColumn - margin - (segSize - 1))
 			MoveCursorDown(rows / 2)
 			Printf("%s", "○")
 
-			// Print the second dot
+			// Print the second dot.
 			MoveCursorBack(1)
 			MoveCursorDown(1)
 			Printf("%s", "○")
 
 			// Return to initial position.
-			MoveCursorBack(offset - 2)
+			// We need the "plus one" because we move forward when end
+			// printing.
+			MoveCursorBack(currColumn - margin + 1)
 			MoveCursorUp(rows/2 + 1)
 		}
 	}

@@ -12,10 +12,10 @@ MAKEFLAGS += --silent
 all: go-build run
 
 run:
-	$(GOBIN)/$(PROJECTNAME)
+	$(GOBIN)/$(PROJECTNAME) $(color)
 
 go-build:
 	go build -o $(GOBIN)/$(PROJECTNAME) $(GOFILES)
 
 go-run:
-	go run $(GOFILES)
+	go run $(GOFILES) $(color)
