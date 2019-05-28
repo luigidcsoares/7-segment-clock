@@ -1,5 +1,7 @@
 package main
 
+import "sync"
+
 // Each position of this array describes how a digit will be displayed as a
 // 7-segment clock digit. For each digit, a segment could be false or true.
 // Segments are shown below:
@@ -42,46 +44,61 @@ func buildDigit(digitValue, segSize int) (digit [][]byte) {
 		}
 	}
 
-	// Horizontal segments (1, 3, 5)
-	segment := 1
-	for i := 0; i < 3; i++ {
-		row := i * segSize
+	// Since horizontal and vertical segments can be build concurrently,
+	// we're running two goroutines (one for each) and synchonizing than
+	// with sync.WaitGroup
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-		// Ex.: row 0 --> segment 1
-		for j := 1; j < len(digit[row])-1; j++ {
-			if digitSegments[digitValue][segment] {
-				digit[row][j] = '_'
+	go func() {
+		defer wg.Done()
+
+		// Horizontal segments (1, 3, 5)
+		segment := 1
+		for i := 0; i < 3; i++ {
+			row := i * segSize
+
+			// Ex.: row 0 --> segment 1
+			for j := 1; j < len(digit[row])-1; j++ {
+				if digitSegments[digitValue][segment] {
+					digit[row][j] = '_'
+				}
+			}
+
+			segment += 2
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		// Vertical segments (0, 2, 4, 6)
+		// Left: 0, 4 (col = 0)
+		// Right: 2, 6 (col = last)
+		for i := 0; i <= 6; i += 2 {
+			// Segments 0, 2 --> top rows
+			// Segments 4, 6 --> bottom rows
+			add := 0
+			if i >= 4 {
+				add = segSize
+			}
+
+			row := 1 + add
+
+			// 0; 4 % 4 = 0 --> Left segments
+			// 2; 6 % 4 = 2 --> Right segments
+			// 0 >> 1 = 0; 2 >> 1 = 1
+			col := (len(digit[row]) - 1) * (i % 4 >> 1)
+
+			for j := row; j < row+segSize; j++ {
+				if digitSegments[digitValue][i] {
+					digit[j][col] = '|'
+				}
 			}
 		}
+	}()
 
-		segment += 2
-	}
-
-	// Vertical segments (0, 2, 4, 6)
-	// Left: 0, 4 (col = 0)
-	// Right: 2, 6 (col = last)
-	for i := 0; i <= 6; i += 2 {
-		// Segments 0, 2 --> top rows
-		// Segments 4, 6 --> bottom rows
-		add := 0
-		if i >= 4 {
-			add = segSize
-		}
-
-		row := 1 + add
-
-		// 0; 4 % 4 = 0 --> Left segments
-		// 2; 6 % 4 = 2 --> Right segments
-		// 0 >> 1 = 0; 2 >> 1 = 1
-		col := (len(digit[row]) - 1) * (i % 4 >> 1)
-
-		for j := row; j < row+segSize; j++ {
-			if digitSegments[digitValue][i] {
-				digit[j][col] = '|'
-			}
-		}
-	}
-
+	wg.Wait()
 	return
 }
 
