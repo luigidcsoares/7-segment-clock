@@ -2,11 +2,14 @@ package main
 
 // Each position of this array describes how a digit will be displayed as a
 // 7-segment clock digit. For each digit, a segment could be false or true.
-// Segments are shown below: __1__
+// Segments are shown below:
+//
+//    __1__
 // 0 |     | 2
 //   |__3__|
 // 4 |     | 6
 //   |__5__|
+//
 var digitSegments = [][]bool{
 	{true, true, true, false, true, true, true},     // 0
 	{false, false, true, false, false, false, true}, // 1

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/signal"
@@ -16,6 +17,57 @@ var mapColors = map[string]string{
 	"magenta": ColorMagenta,
 	"cyan":    ColorCyan,
 	"white":   ColorWhite,
+}
+
+func printRealTime(segment chan int, pause chan bool) {
+	// Initial value.
+	segSize := <-segment
+
+	// Space between digits.
+	margin := 4
+
+	// Number of rows needed to print a digit.
+	rows := segSize*2 + 1
+
+	PrintClock(NowAsMatrix(), segSize, margin)
+	for {
+		select {
+		case <-pause:
+			segSize = <-segment
+			rows = segSize*2 + 1
+			PrintClock(NowAsMatrix(), segSize, margin)
+		default:
+			// Sleep for a small time just for make sure that nothing (Ctrl-C for
+			// example) will mess up with screen
+			time.Sleep(time.Millisecond * 10)
+			MoveCursorPreviousLine(rows + 1)
+			PrintClock(NowAsMatrix(), segSize, margin)
+		}
+	}
+}
+
+func askParams(min, max int) (n, segSize int) {
+	// Number of printed lines.
+	n = 0
+
+	for {
+		fmt.Print("## Entre com o tamanho do segmento [1..5]: ")
+		n++
+
+		fmt.Scanln(&segSize)
+		fmt.Scan("\n")
+
+		// Segment size is in the specified range.
+		if segSize >= min && segSize <= max {
+			break
+		}
+
+		// Else, ask the segment size again.
+		fmt.Println("## O valor deve ser entre 1 e 5!!!")
+		n++
+	}
+
+	return
 }
 
 func main() {
@@ -34,28 +86,11 @@ func main() {
 	// Set parameters.
 	min := 1
 	max := 5
-	var segSize int
+	n, segSize := askParams(min, max)
 
-	for {
-		fmt.Print("## Entre com o tamanho do segmento [1..5]: ")
-		fmt.Scan(&segSize)
-		fmt.Scan("\n")
-
-		// Segment size is in the specified range.
-		if segSize >= min && segSize <= max {
-			fmt.Println()
-			break
-		}
-
-		// Else, ask the segment size again.
-		fmt.Println("## O valor deve ser entre 1 e 5!!!")
-	}
-
-	// Space between digits.
-	margin := 4
-
-	// Number of rows needed to print a digit.
-	rows := segSize*2 + 1
+	// If user pressed s, stop to read the new segment size.
+	fmt.Println("## Pressione enter para redefinir os parâmetros")
+	fmt.Println("## Pressione Ctrl-C para finalizar")
 
 	// Handle interrupt signal (Ctrl-C) properly.
 	sig := make(chan os.Signal, 1)
@@ -72,12 +107,42 @@ func main() {
 		os.Exit(0)
 	}()
 
-	PrintClock(NowAsMatrix(), segSize, margin)
+	// Create channels to communicate with print routine.
+	pause := make(chan bool)
+	segment := make(chan int)
+
+	// Run real time printing on another go routine.
+	go printRealTime(segment, pause)
+
+	// Send initial segment size.
+	segment <- segSize
+
+	// New buffered read to read from stdin.
+	// We're using this to read until reach a newline character, so we know
+	// user pressed ENTER.
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		// Sleep for a small time just for make sure that nothing (Ctrl-C for
-		// example) will mess up with screen
-		time.Sleep(time.Millisecond * 10)
-		MoveCursorPreviousLine(rows + 1)
-		PrintClock(NowAsMatrix(), segSize, margin)
+		reader.ReadString('\n')
+
+		// If enter was pressed, stop clock; clean everything and ask again for
+		// input.
+		pause <- true
+
+		// Go back the total number of rows printed until then.
+		// nrows is the number of rows between the first print and the curret
+		// line of cursor when pressed ENTER.
+		nrows := n + (segSize*2 + 1) + 4
+
+		MoveCursorPreviousLine(nrows)
+		ClearScreenEnd()
+		Flush()
+
+		n, segSize = askParams(min, max)
+
+		// If user pressed s, stop to read the new segment size.
+		fmt.Println("## Pressione enter para redefinir os parâmetros")
+		fmt.Println("## Pressione Ctrl-C para finalizar")
+
+		segment <- segSize
 	}
 }

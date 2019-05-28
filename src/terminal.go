@@ -86,3 +86,8 @@ func MoveCursorPreviousLine(n int) {
 func MoveCursorNextLine(n int) {
 	fmt.Fprintf(screen, "%s%dE", csi, n)
 }
+
+// ClearScreenEnd clear from cursor to end of screen.
+func ClearScreenEnd() {
+	fmt.Fprintf(screen, "%s%dJ", csi, 0)
+}
