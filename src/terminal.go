@@ -11,12 +11,13 @@ const (
 	// ESC[ --> ESC = \033 (ASCII octal)
 	esc = "\033"
 
-	// ANSI Control Sequence Introducer used to move cursor on the screen:
+	// ANSI CSI (Control Sequence Introducer).
+	// Utilizado para mover o cursor na tela.
 	// ESC
 	csi = esc + "["
 )
 
-// Basic 3/4 bit ANSI colors.
+// Cores básicas ANSI (3/4 bits).
 const (
 	ColorBlack   = csi + "1;30m"
 	ColorRed     = csi + "1;31m"
@@ -28,66 +29,66 @@ const (
 	ColorWhite   = csi + "1;37m"
 )
 
-// A new buffered writer to write to stdout.
+// Criamos um novo buffer para escrever no stdout no método Flush.
 var out = bufio.NewWriter(os.Stdout)
 
-// A buffer to be used before writing to stdout.
+// Criamos, também, um buffer para ser utilizado antes da escrita ao stdout.
 var screen = new(bytes.Buffer)
 
-// Print writes params on screen buffer.
+// Print escreve os parâmetros no buffer.
 func Print(args ...interface{}) (n int, err error) {
 	return fmt.Fprint(screen, args...)
 }
 
-// Println write params on screen buffer adding a new line.
+// Println escreve os parâmetros no buffer, adicionando uma nova linha.
 func Println(args ...interface{}) (n int, err error) {
 	return fmt.Fprintln(screen, args...)
 }
 
-// Printf format params and write on screen buffer.
+// Printf realiza a formatação e escreve a saída no buffer.
 func Printf(format string, args ...interface{}) (n int, err error) {
 	return fmt.Fprintf(screen, format, args...)
 }
 
-// Flush writes everything that is on the screen buffer, reset it and flush
-// stdout.
+// Flush escreve tudo que exite no buffer da tela, o reseta e chama o método
+// flush para que a escrita no stdout seja realizada.
 func Flush() {
 	out.WriteString(screen.String())
 	screen.Reset()
 	out.Flush()
 }
 
-// MoveCursorUp moves the cursor <n> cells up.
+// MoveCursorUp move o cursor <n> células para cima.
 func MoveCursorUp(n int) {
 	fmt.Fprintf(screen, "%s%dA", csi, n)
 }
 
-// MoveCursorDown moves the cursor <n> cells down.
+// MoveCursorDown move o cursor <n> células para baixo.
 func MoveCursorDown(n int) {
 	fmt.Fprintf(screen, "%s%dB", csi, n)
 }
 
-// MoveCursorForward moves the cursor <n> cells forward.
+// MoveCursorForward move o cursor <n> células para a direita.
 func MoveCursorForward(n int) {
 	fmt.Fprintf(screen, "%s%dC", csi, n)
 }
 
-// MoveCursorBack moves the cursor <n> cells back.
+// MoveCursorBack move o cursor <n> células para a esquerda.
 func MoveCursorBack(n int) {
 	fmt.Fprintf(screen, "%s%dD", csi, n)
 }
 
-// MoveCursorPreviousLine moves the cursor to beginning of <n> lines up.
+// MoveCursorPreviousLine move o cursor para o inicío da n-ésima linha a cima.
 func MoveCursorPreviousLine(n int) {
 	fmt.Fprintf(screen, "%s%dF", csi, n)
 }
 
-// MoveCursorNextLine moves the cursor to beginning of <n> lines down.
+// MoveCursorNextLine move o cursor para o início da n-ésima linha abaixo.
 func MoveCursorNextLine(n int) {
 	fmt.Fprintf(screen, "%s%dE", csi, n)
 }
 
-// ClearScreenEnd clear from cursor to end of screen.
+// ClearScreenEnd limpa a tela a partir do cursor até o final.
 func ClearScreenEnd() {
 	fmt.Fprintf(screen, "%s%dJ", csi, 0)
 }

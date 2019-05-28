@@ -4,9 +4,9 @@ import (
 	"time"
 )
 
-// NowAsMatrix returns the current time in the form of a matrix of 3 rows and 2
-// columns, where each row refer to a piece of the time (hour, minute or
-// second) and each column indicates one algarism (HH:MM:SS).
+// NowAsMatrix retorna o tempo atual na forma de uma matriz de 3 linhas e 2
+// colunas. Nesta, cada linha se refere a uma unidade de tempo (hora, minuto ou
+// segundo), e cada coluna se refere a um algarismo da unidade.
 func NowAsMatrix() (now [3][2]int) {
 	h, m, s := time.Now().Clock()
 	now[0] = [2]int{h / 10, h % 10}
